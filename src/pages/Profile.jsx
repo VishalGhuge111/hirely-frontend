@@ -4,7 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import api from "../services/api";
 
 function Profile() {
-  const { user, logout, token, login } = useContext(AuthContext);
+  const { user, logout, token, updateUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
@@ -18,34 +18,46 @@ function Profile() {
   useEffect(() => {
     if (!user) navigate("/login");
   }, [user, navigate]);
+  useEffect(() => {
+  if (user) {
+    setFormData({
+      name: user.name || "",
+      mobile: user.mobile || "",
+      linkedin: user.linkedin || "",
+    });
+  }
+}, [user]);
 
   if (!user) return null;
 
   const handleSave = async () => {
-    setSaving(true);
-    setMessage({ text: "", type: "" });
-    try {
-      const res = await api.put("/auth/profile", formData, {
+  setSaving(true);
+  setMessage({ text: "", type: "" });
+
+  try {
+    const res = await api.put(
+      "/auth/profile",
+      formData,
+      {
         headers: { Authorization: `Bearer ${token}` },
-      });
-      login({
-  user: {
-    ...user,
-    ...res.data,
-    mobile: formData.mobile,
-    linkedin: formData.linkedin
-  },
-  token
-});
-      setMessage({ text: "Profile updated successfully!", type: "success" });
-      setEditMode(false);
-    } catch (error) {
-      setMessage({ text: error.response?.data?.message || "Failed to update profile", type: "error" });
-    } finally {
-      setSaving(false);
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
-    }
-  };
+      }
+    );
+
+    // ✅ STORE BACKEND RESPONSE DIRECTLY
+    updateUser(res.data);
+
+    setMessage({ text: "Profile updated successfully!", type: "success" });
+    setEditMode(false);
+  } catch (error) {
+    setMessage({
+      text: error.response?.data?.message || "Failed to update profile",
+      type: "error",
+    });
+  } finally {
+    setSaving(false);
+    setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+  }
+};
 
   // --- NEW DELETE LOGIC ---
   const handleDeleteAccount = async () => {

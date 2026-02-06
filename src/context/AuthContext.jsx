@@ -8,7 +8,7 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /* Load from storage */
+  // Load auth from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("auth");
 
@@ -21,39 +21,30 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  /* ✅ FIXED LOGIN (MERGE USER) */
+  // LOGIN
   const login = (data) => {
-
-    setUser(prevUser => {
-
-      const mergedUser = {
-        ...prevUser,      // keep existing fields
-        ...data.user      // override with new ones
-      };
-
-      localStorage.setItem(
-        "auth",
-        JSON.stringify({
-          user: mergedUser,
-          token: data.token
-        })
-      );
-
-      return mergedUser;
-    });
-
+    localStorage.setItem("auth", JSON.stringify(data));
+    setUser(data.user);
     setToken(data.token);
   };
 
+  // LOGOUT
   const logout = () => {
     localStorage.removeItem("auth");
     setUser(null);
     setToken(null);
   };
 
+  // PROFILE UPDATE
+  const updateUser = (data) => {
+    localStorage.setItem("auth", JSON.stringify(data));
+    setUser(data.user);
+    setToken(data.token);
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, token, login, logout, loading }}
+      value={{ user, token, login, logout, updateUser, loading }}
     >
       {children}
     </AuthContext.Provider>
